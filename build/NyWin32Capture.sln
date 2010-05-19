@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NyWin32CaptureDll", "NyWin32CaptureDll.vcproj", "{79422FBE-29E9-4764-AF8E-235DA245CB9E}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "NyWin32CaptureLib", "NyWin32CaptureLib.vcproj", "{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_MBCS|Win32 = Debug_MBCS|Win32
+		Debug_MBMFCS|Win32 = Debug_MBMFCS|Win32
+		Release_MBCS|Win32 = Release_MBCS|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{79422FBE-29E9-4764-AF8E-235DA245CB9E}.Debug_MBCS|Win32.ActiveCfg = Debug_MBCS|Win32
+		{79422FBE-29E9-4764-AF8E-235DA245CB9E}.Debug_MBCS|Win32.Build.0 = Debug_MBCS|Win32
+		{79422FBE-29E9-4764-AF8E-235DA245CB9E}.Debug_MBMFCS|Win32.ActiveCfg = Debug_MBMFCS|Win32
+		{79422FBE-29E9-4764-AF8E-235DA245CB9E}.Debug_MBMFCS|Win32.Build.0 = Debug_MBMFCS|Win32
+		{79422FBE-29E9-4764-AF8E-235DA245CB9E}.Release_MBCS|Win32.ActiveCfg = Release_MBCS|Win32
+		{79422FBE-29E9-4764-AF8E-235DA245CB9E}.Release_MBCS|Win32.Build.0 = Release_MBCS|Win32
+		{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}.Debug_MBCS|Win32.ActiveCfg = Debug_MBCS|Win32
+		{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}.Debug_MBCS|Win32.Build.0 = Debug_MBCS|Win32
+		{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}.Debug_MBMFCS|Win32.ActiveCfg = Debug_MBMFCS|Win32
+		{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}.Debug_MBMFCS|Win32.Build.0 = Debug_MBMFCS|Win32
+		{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}.Release_MBCS|Win32.ActiveCfg = Release_MBCS|Win32
+		{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}.Release_MBCS|Win32.Build.0 = Release_MBCS|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

@@ -25,6 +25,7 @@ http://social.msdn.microsoft.com/forums/en-US/windowssdk/thread/ed097d2c-3d68-4f
 #include <exception>
 #include <vector>
 #include <streams.h>
+#include <assert.h>
 
 using namespace std;
 
@@ -72,7 +73,13 @@ namespace NyWin32Capture
 			}
 			this->ptr=NULL;
 		}
+		void release()
+		{
+			this->ptr->Release();
+			this->ptr=NULL;
+		}
 	};
+
 
 
 	/*ICaptureGraphBuilder2からIAMStreamConfigインタフェイスを取得する。
@@ -88,34 +95,31 @@ namespace NyWin32Capture
 	}
 	/*	Pinのカテゴリを取得する。
 	*/
-	static bool mGetPinCategory(IPin* pPin,GUID& Category)
+	static void mGetPinCategory(IPin* pPin,GUID& Category)
 	{
-		IKsPropertySet *pKs;
-		HRESULT hr = pPin->QueryInterface(IID_IKsPropertySet, (void **)&pKs);
-		if (SUCCEEDED(hr))
+		AutoReleaseComPtr<IKsPropertySet> pKs;
+		HRESULT hr = pPin->QueryInterface(IID_IKsPropertySet, (void **)&(pKs.ptr));
+		if (!SUCCEEDED(hr))
 		{
-			DWORD cbReturned;
-			hr = pKs->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, NULL, 0, &Category, sizeof(GUID), &cbReturned);
-			pKs->Release();
-			return true;
+			throw NyWin32CaptureException();
 		}
-		return false;
+		DWORD cbReturned;
+		hr = pKs->Get(AMPROPSETID_Pin, AMPROPERTY_PIN_CATEGORY, NULL, 0, &Category, sizeof(GUID), &cbReturned);
 	}
 
 	/**/
 	static IPin* mFindPinByDirection(IBaseFilter *pFilter, PIN_DIRECTION PinDir,int i_index)
 	{
-		BOOL       bFound = FALSE;
-		IEnumPins  *pEnum;
-		IPin       *pPin;
 		int index=i_index;
 
-		HRESULT hr = pFilter->EnumPins(&pEnum);
+		AutoReleaseComPtr<IEnumPins> pEnum;
+		HRESULT hr = pFilter->EnumPins(&(pEnum.ptr));
 		if (FAILED(hr))
 		{
 			return NULL;
 		}
-		while(pEnum->Next(1, &pPin, 0) == S_OK)
+		AutoReleaseComPtr<IPin> pPin;
+		while(pEnum->Next(1, &(pPin.ptr), 0) == S_OK)
 		{
 			PIN_DIRECTION PinDirThis;
 			if(pPin->QueryDirection(&PinDirThis)!=S_OK){
@@ -123,53 +127,47 @@ namespace NyWin32Capture
 			}
 			if(PinDir != PinDirThis)
 			{
-				pPin->Release();
+				pPin.release();
 				continue;
 			}
 			if(index>0)
 			{
 				index--;
-				pPin->Release();
+				pPin.release();
 				continue;
 			}
-			bFound=true;
+			IPin* result;
+			pPin.detach(&result);
+			return result;
 		}
-		pEnum->Release();
-		return (bFound ? pPin : NULL);  
+		return NULL;  
 	}
 
 
 	static IPin* mFindPinByCategory(IBaseFilter* i_filter,const GUID& Category)
 	{
 		HRESULT hr;
-		IEnumPins *pEnum = 0;
-		if (SUCCEEDED(i_filter->EnumPins(&pEnum)))
+		AutoReleaseComPtr<IEnumPins> pEnum;
+		if (SUCCEEDED(i_filter->EnumPins(&(pEnum.ptr))))
 		{
-			IPin *pPin = 0;
-			while (hr = pEnum->Next(1, &pPin, 0), hr == S_OK)
+			AutoReleaseComPtr<IPin> pPin;
+			while (hr = pEnum->Next(1, &(pPin.ptr), 0), hr == S_OK)
 			{
 				PIN_DIRECTION ThisPinDir;
 				hr = pPin->QueryDirection(&ThisPinDir);
 				if (FAILED(hr))
 				{
-					pPin->Release();
-					pEnum->Release();
-					return NULL; // 予期しないことが発生した。
+					throw NyWin32CaptureException();
 				}
 				GUID pin_category;
-				if (!mGetPinCategory(pPin, pin_category))
-				{
-					pEnum->Release();
-					return NULL;
-				}
+				mGetPinCategory(pPin, pin_category);
+
 				if(Category==pin_category)
 				{
-					pEnum->Release();
 					return pPin;
 				}
-				pPin->Release();
+				pPin.release();
 			}
-			pEnum->Release();
 		}
 		// 一致するピンがない。
 		return NULL;
@@ -177,48 +175,81 @@ namespace NyWin32Capture
 
 	/*	グラフの持つ全てのフィルタピンを切断する。
 	*/
-	static bool mDisconnectAll(IGraphBuilder* i_graph)
+	static void mDisconnectAll(IGraphBuilder* i_graph)
 	{
 		HRESULT hr = S_OK;
 		if (i_graph==NULL)
 		{
-			return false;
+			throw NyWin32CaptureException();
 		}
 
-		IEnumFilters* enum_filter = NULL;
-		hr = i_graph->EnumFilters(&enum_filter);
+		AutoReleaseComPtr<IEnumFilters> enum_filter;
+		hr = i_graph->EnumFilters(&(enum_filter.ptr));
 		if(!SUCCEEDED(hr))
 		{
-			return false;
+			throw NyWin32CaptureException();
 		}
-		IBaseFilter* filter = NULL;
-		while(S_OK == enum_filter->Next(1, &filter, NULL))
+		AutoReleaseComPtr<IBaseFilter> filter;
+		while(S_OK == enum_filter->Next(1, &(filter.ptr), NULL))
 		{
-			IEnumPins* enum_pins = NULL;
-			hr = filter->EnumPins(&enum_pins);
+			AutoReleaseComPtr<IEnumPins> enum_pins;
+			hr = filter->EnumPins(&(enum_pins.ptr));
 			if(!SUCCEEDED(hr))
 			{
 				continue;
 			}
-			IPin* pin = NULL;
-			while (S_OK == enum_pins->Next(1, &pin, NULL))
+			AutoReleaseComPtr<IPin> pin;
+			while (S_OK == enum_pins->Next(1, &(pin.ptr), NULL))
 			{
-				IPin* pin2 = NULL;
-				if (S_OK == pin->ConnectedTo(&pin2))
+				AutoReleaseComPtr<IPin> pin2;
+				if (S_OK == pin->ConnectedTo(&(pin2.ptr)))
 				{
 					// pins are connected, to disconnect filters, both pins must be disconnected
 					hr = i_graph->Disconnect(pin);
 					hr = i_graph->Disconnect(pin2);
-					pin2->Release();
 				}
-				pin->Release();
+				pin.release();
 			}
-			filter->Release();
-			enum_pins->Release();
+			filter.release();
 		}
-		enum_filter->Release();
-		return true;
+		return;
 	}
+
+
+	class CaptureImageCallback: public CUnknown, public ISampleGrabberCB
+	{
+	private:
+		OnCaptureImage _callback;
+	public:
+		DECLARE_IUNKNOWN;
+
+		STDMETHODIMP NonDelegatingQueryInterface(REFIID riid, void **ppv)
+		{
+			if( riid == IID_ISampleGrabberCB ){
+				return GetInterface((ISampleGrabberCB*)this, ppv);
+			}
+			return CUnknown::NonDelegatingQueryInterface(riid, ppv);
+		}
+		STDMETHODIMP SampleCB(double SampleTime, IMediaSample *pSample)
+		{
+			return E_NOTIMPL;
+		}
+
+		STDMETHODIMP BufferCB(double SampleTime, BYTE *pBuffer, long BufferLen)
+		{
+			this->_callback(pBuffer,BufferLen);
+			return S_OK;
+		}
+		// コンストラクタ
+		CaptureImageCallback(OnCaptureImage i_callback) : CUnknown("SGCB", NULL)
+		{
+			this->_callback=i_callback;
+		}
+
+	};
+
+
+
 
 
 
@@ -332,6 +363,7 @@ namespace NyWin32Capture
 			//追加
 			this->_list->push_back(fmt);
 		}
+		return;
 	}
 	VideoFormatList::~VideoFormatList()
 	{
@@ -397,6 +429,7 @@ namespace NyWin32Capture
 			VariantClear(&varName);
 			bag->Release();
 		}
+		this->_image_cb=NULL;
 		this->_status  =ST_CLOSED;
 	}
 	CaptureDevice::~CaptureDevice()
@@ -434,8 +467,8 @@ namespace NyWin32Capture
 		AM_MEDIA_TYPE amt;
 		//現状のキャプチャ情報を取得
 		hr=this->ds_res.render.grab->GetConnectedMediaType(&amt);
-		VIDEOINFOHEADER *pVideoHeader = (VIDEOINFOHEADER*)amt.pbFormat;
-		CopyMemory(&this->_capture_format,&(pVideoHeader->bmiHeader),sizeof(BITMAPINFOHEADER));
+		CopyMemory(&this->_capture_format,&(amt.pbFormat),sizeof(VIDEOINFOHEADER));
+		FreeMediaType(amt);
 
 		//レンダラの開始
 		hr=this->ds_res.render.grab->SetBufferSamples(TRUE);	// グラブ開始
@@ -444,14 +477,27 @@ namespace NyWin32Capture
 		this->_status=ST_RUN;
 		return;
 	}
-
-	const BITMAPINFOHEADER& CaptureDevice::getImageFormat()const
+	void CaptureDevice::startCaptureCallback(OnCaptureImage i_callback)
 	{
-		if(this->_status!=ST_RUN){
+		assert(i_callback!=NULL);
+		//状態チェック
+		if(this->_status!=ST_IDLE){
 			throw NyWin32CaptureException();
 		}
-		return this->_capture_format;
+		HRESULT hr;
+		try{
+			//コールバックオブジェクト作る。
+			//コールバックをセットする。
+			this->_image_cb=new CaptureImageCallback(i_callback);
+			hr=this->ds_res.render.grab->SetCallback(this->_image_cb,1);
+		}catch(...){
+			//失敗したときはコールバック関連のオブジェクトを削除
+			this->ds_res.render.grab->SetCallback(NULL,1);
+			this->_image_cb->Release();
+			this->_image_cb=NULL;
+		}
 	}
+
 	void CaptureDevice::stopCapture()
 	{
 		//状態チェック
@@ -465,12 +511,32 @@ namespace NyWin32Capture
 		hr=this->ds_res.graph_builder.mc->Stop();
 		hr=this->ds_res.render.grab->SetBufferSamples(FALSE);
 
+		//コールバックが指定されていれば解除
+		if(this->_image_cb!=NULL){
+			this->ds_res.render.grab->SetCallback(NULL,1);
+			this->_image_cb->Release();
+			this->_image_cb=NULL;
+		}
 		//フィルタ内の全pinを切断
 		mDisconnectAll(this->ds_res.graph_builder.graph);
 
 		this->_status=ST_IDLE;
+		return;
 	}
-
+	const VIDEOINFOHEADER& CaptureDevice::getVIDEOINFOHEADER()const
+	{
+		if(this->_status!=ST_RUN){
+			throw NyWin32CaptureException();
+		}
+		return this->_capture_format;
+	}
+	const BITMAPINFOHEADER& CaptureDevice::getBITMAPINFOHEADER()const
+	{
+		if(this->_status!=ST_RUN){
+			throw NyWin32CaptureException();
+		}
+		return this->_capture_format.bmiHeader;
+	}
 
 	/*	キャプチャデバイスをオープンします。
 	*/
@@ -481,7 +547,7 @@ namespace NyWin32Capture
 		{
 			throw NyWin32CaptureException();
 		}
-		
+
 		HRESULT hr;
 
 		// グラバフィルタを作る
@@ -589,7 +655,7 @@ namespace NyWin32Capture
 		}
 
 		HRESULT hr;
-		long n=i_buf_size==0?this->_capture_format.biSizeImage:i_buf_size;
+		long n=i_buf_size==0?this->_capture_format.bmiHeader.biSizeImage:i_buf_size;
 
 		hr = this->ds_res.render.grab -> GetCurrentBuffer(&n,(long *)i_buf);
 		return SUCCEEDED(hr);
@@ -621,9 +687,9 @@ namespace NyWin32Capture
 		reinterpret_cast<VIDEOINFOHEADER*>(nmt->pbFormat)->AvgTimePerFrame=(REFERENCE_TIME)(10000000.0/i_rate);
 		hr=this->ds_res.sorce.config->SetFormat(nmt);
 		if(!SUCCEEDED(hr)){
+			DeleteMediaType(nmt);
 			return false;
-		}		
-		DeleteMediaType(nmt);
+		}
 		return true;
 	}
 	const WCHAR* CaptureDevice::getName()const
@@ -637,7 +703,7 @@ namespace NyWin32Capture
 
 namespace NyWin32Capture
 {
-
+//		bool startCaptureCallback(ICaptureImageListener i_listener);
 
 	void CaptureDeviceList::createDeviceList()
 	{
@@ -647,32 +713,28 @@ namespace NyWin32Capture
 		// キャプチャデバイスを探す
 		ULONG cFetched;
 		// デバイス列挙子を作成
-		ICreateDevEnum* pDevEnum = NULL;
-		CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,IID_ICreateDevEnum, (void ** ) &pDevEnum);
-
+		AutoReleaseComPtr<ICreateDevEnum> pDevEnum;
+		hr=CoCreateInstance(CLSID_SystemDeviceEnum, NULL, CLSCTX_INPROC,IID_ICreateDevEnum, (void ** ) &(pDevEnum.ptr));
+		if(!SUCCEEDED(hr)){
+			throw NyWin32CaptureException();
+		}
 		// ビデオキャプチャデバイス列挙子を作成
-		if(pDevEnum == NULL){
+		AutoReleaseComPtr<IEnumMoniker> pClassEnum;
+		hr=pDevEnum -> CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &(pClassEnum.ptr), 0);
+		if(hr!=S_OK){
 			// do nothing
 		}else{
-			IEnumMoniker * pClassEnum = NULL;
-			hr=pDevEnum -> CreateClassEnumerator(CLSID_VideoInputDeviceCategory, &pClassEnum, 0);
-			if(hr!=S_OK){
-				// do nothing
-			}else{
-				IMoniker * pMoniker = NULL;
-				for(;;)
-				{
-					hr=pClassEnum -> Next(1, &pMoniker, &cFetched);
-					if(hr!=S_OK){
-						break;
-					}
-					CaptureDevice* cd=new CaptureDevice(pMoniker);
-					this->_list->push_back(cd);
+			IMoniker * pMoniker = NULL;
+			for(;;)
+			{
+				hr=pClassEnum -> Next(1, &pMoniker, &cFetched);
+				if(hr!=S_OK){
+					break;
 				}
+				CaptureDevice* cd=new CaptureDevice(pMoniker);
+				this->_list->push_back(cd);
 			}
 		}
-		pDevEnum->Release();
-
 	}
 	void CaptureDeviceList::releaseDeviceList()
 	{

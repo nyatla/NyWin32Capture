@@ -7,12 +7,6 @@
 #include <dshow.h>
 #include <uuids.h>
 
-#define NyWin32Capture_EXPORTS
-#ifdef NyWin32Capture_EXPORTS
-#define NyWin32Capture_API __declspec(dllexport)
-#else
-#define NyWin32Capture_API __declspec(dllimport)
-#endif
 
 namespace NyWin32Capture
 {
@@ -84,6 +78,13 @@ struct ISampleGrabber;
 
 namespace NyWin32Capture
 {
+	class CaptureImageCallback;
+
+
+	typedef void (*OnCaptureImage)(BYTE *pBuffer, long BufferLen);
+
+
+
 	/**	このクラスは、キャプチャデバイス１つを制御します。
 		このクラスは３つの状態ST_RUN,ST_IDLE,ST_CLOSEDを持ちます。
 		ステータスと、これを変化させる関数名の関係は以下の通りです。
@@ -107,7 +108,7 @@ namespace NyWin32Capture
 		const static int ST_RUN=2;
 	private:
 		IMoniker*    _moniker;
-		BITMAPINFOHEADER _capture_format;
+		VIDEOINFOHEADER _capture_format;
 		struct{
 			struct{
 				IBaseFilter* filter;
@@ -128,10 +129,12 @@ namespace NyWin32Capture
 			WCHAR* name;
 		}_allocated_res;
 		int _status;
+		CaptureImageCallback* _image_cb;
 	public:
 		CaptureDevice(IMoniker* i_moniker);
 		virtual ~CaptureDevice();
 		void startCapture();
+		void startCaptureCallback(OnCaptureImage i_callback);
 		void stopCapture();
 		void openDevice();
 		void closeDevice();
@@ -140,6 +143,7 @@ namespace NyWin32Capture
 		*/
 		void getVideoFormatList(VideoFormatList& o_list)const;
 		/** キャプチャイメージを取得します。
+			この関数は、startCaptureからしばらくの間失敗することがあります。
 			この関数は、ST_RUNステータスのときだけ使用可能です。
 		*/
 		bool captureImage(void* i_buf,long i_buf_size=0);
@@ -152,9 +156,16 @@ namespace NyWin32Capture
 		*/
 		bool setVideoFormat(const VideoFormat& i_format,double i_rate);
 		/**	キャプチャ画像のフォーマットを取得します。
+			startCaptureで開始した場合のみ使用できます。
 			この関数は、ST_RUNステータスのときだけ使用可能です。
 		*/
-		const BITMAPINFOHEADER& getImageFormat()const;
+		const BITMAPINFOHEADER& getBITMAPINFOHEADER()const;
+		/** キャプチャしているビデオのフォーマットを取得します。
+			この関数は、ST_RUNステータスのときだけ使用可能です。
+		*/
+		const VIDEOINFOHEADER& CaptureDevice::getVIDEOINFOHEADER()const;
+
+
 		const WCHAR* getName()const;
 	};
 }

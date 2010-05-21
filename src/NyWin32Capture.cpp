@@ -84,10 +84,10 @@ namespace NyWin32Capture
 
 	/*ICaptureGraphBuilder2からIAMStreamConfigインタフェイスを取得する。
 	*/
-	static bool mGetIAMStreamConfig(ICaptureGraphBuilder2* i_capbuilder,IBaseFilter* i_basefilter,const GUID& i_pin_category,IAMStreamConfig** o_config)
+	static bool mGetIAMStreamConfig(IPin* i_pin,IAMStreamConfig** o_config)
 	{
 		HRESULT hr;
-		hr = i_capbuilder->FindInterface(&i_pin_category,0,i_basefilter,IID_IAMStreamConfig, (void **)o_config);
+		hr=i_pin->QueryInterface(IID_IAMStreamConfig, (void **)o_config);
 		if(FAILED(hr)){
 			return false;
 		}
@@ -219,6 +219,7 @@ namespace NyWin32Capture
 	class CaptureImageCallback: public CUnknown, public ISampleGrabberCB
 	{
 	private:
+		CaptureDevice* _sender;
 		OnCaptureImage _callback;
 	public:
 		DECLARE_IUNKNOWN;
@@ -237,11 +238,11 @@ namespace NyWin32Capture
 
 		STDMETHODIMP BufferCB(double SampleTime, BYTE *pBuffer, long BufferLen)
 		{
-			this->_callback(pBuffer,BufferLen);
+			this->_callback(this->_sender,pBuffer,BufferLen);
 			return S_OK;
 		}
 		// コンストラクタ
-		CaptureImageCallback(OnCaptureImage i_callback) : CUnknown("SGCB", NULL)
+		CaptureImageCallback(CaptureDevice* i_sender,OnCaptureImage i_callback) : CUnknown("SGCB", NULL)
 		{
 			this->_callback=i_callback;
 		}
@@ -388,7 +389,7 @@ namespace NyWin32Capture
 			{
 				continue;
 			}
-			if(i_format==f->getFormat())
+			if(i_format!=f->getFormat())
 			{
 				continue;
 			}
@@ -457,22 +458,33 @@ namespace NyWin32Capture
 		if(this->_status!=ST_IDLE){
 			throw NyWin32CaptureException();
 		}
-		//HRESULTチェックしてないところがある。
 		HRESULT hr;
-
+		//ピン2本を取得
+		AutoReleaseComPtr<IPin> dest_pin(mFindPinByDirection(this->ds_res.render.filter, PINDIR_INPUT,0));
 
 		//キャプチャグラフを接続
-		hr=this->ds_res.cap_builder->RenderStream(&this->ds_res.sorce.pin_category, &MEDIATYPE_Video,this->ds_res.sorce.filter, NULL,this->ds_res.render.filter);
+		hr=this->ds_res.graph_builder.graph->Connect(this->ds_res.sorce.pin,dest_pin);
+		if(!SUCCEEDED(hr)){
+			throw NyWin32CaptureException();
+		}
 
-		AM_MEDIA_TYPE amt;
 		//現状のキャプチャ情報を取得
-		hr=this->ds_res.render.grab->GetConnectedMediaType(&amt);
-		CopyMemory(&this->_capture_format,&(amt.pbFormat),sizeof(VIDEOINFOHEADER));
-		FreeMediaType(amt);
+		hr=this->ds_res.render.grab->GetConnectedMediaType(&this->_capture_mediatype);
+		if(!SUCCEEDED(hr)){
+			throw NyWin32CaptureException();
+		}
+		FreeMediaType(this->_capture_mediatype);
 
 		//レンダラの開始
 		hr=this->ds_res.render.grab->SetBufferSamples(TRUE);	// グラブ開始
+		if(!SUCCEEDED(hr)){
+			throw NyWin32CaptureException();
+		}
+
 		hr=this->ds_res.graph_builder.mc->Run();               // レンダリング開始
+		if(!SUCCEEDED(hr)){
+			throw NyWin32CaptureException();
+		}
 
 		this->_status=ST_RUN;
 		return;
@@ -488,7 +500,7 @@ namespace NyWin32Capture
 		try{
 			//コールバックオブジェクト作る。
 			//コールバックをセットする。
-			this->_image_cb=new CaptureImageCallback(i_callback);
+			this->_image_cb=new CaptureImageCallback(this,i_callback);
 			hr=this->ds_res.render.grab->SetCallback(this->_image_cb,1);
 		}catch(...){
 			//失敗したときはコールバック関連のオブジェクトを削除
@@ -523,21 +535,13 @@ namespace NyWin32Capture
 		this->_status=ST_IDLE;
 		return;
 	}
-	const VIDEOINFOHEADER& CaptureDevice::getVIDEOINFOHEADER()const
+	const AM_MEDIA_TYPE& CaptureDevice::getMediaType()const
 	{
 		if(this->_status!=ST_RUN){
 			throw NyWin32CaptureException();
 		}
-		return this->_capture_format;
+		return this->_capture_mediatype;
 	}
-	const BITMAPINFOHEADER& CaptureDevice::getBITMAPINFOHEADER()const
-	{
-		if(this->_status!=ST_RUN){
-			throw NyWin32CaptureException();
-		}
-		return this->_capture_format.bmiHeader;
-	}
-
 	/*	キャプチャデバイスをオープンします。
 	*/
 	void CaptureDevice::openDevice()
@@ -564,8 +568,8 @@ namespace NyWin32Capture
 		}
 
 		//キャプチャグラフを作る  
-		AutoReleaseComPtr<IGraphBuilder> pGraph;
-		hr=CoCreateInstance( CLSID_FilterGraph, NULL, CLSCTX_INPROC,IID_IGraphBuilder, (void **) &(pGraph.ptr));
+		AutoReleaseComPtr<IFilterGraph2> pGraph;
+		hr=CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC,IID_IFilterGraph2, (void **) &(pGraph.ptr));
 		if(!SUCCEEDED(hr)){
 			throw NyWin32CaptureException();
 		}
@@ -602,18 +606,18 @@ namespace NyWin32Capture
 		}
 
 		//Configを得る(STILL→PREVIEWの順)
-		AutoReleaseComPtr<IAMStreamConfig> config;
-		if(mGetIAMStreamConfig(pCapture,this->ds_res.sorce.filter,PIN_CATEGORY_STILL,&config.ptr)){
-			this->ds_res.sorce.pin_category=PIN_CATEGORY_STILL;
-		}else{
-			if(mGetIAMStreamConfig(pCapture,this->ds_res.sorce.filter,PIN_CATEGORY_PREVIEW,&config.ptr)){
-				this->ds_res.sorce.pin_category=PIN_CATEGORY_PREVIEW;
-			}else{
-				throw NyWin32CaptureException();
-			}
+		AutoReleaseComPtr<IPin> pin;
+		pin.ptr=mFindPinByCategory(this->ds_res.sorce.filter,PIN_CATEGORY_CAPTURE);
+		if(pin.ptr==NULL){
+			pin.ptr=mFindPinByCategory(this->ds_res.sorce.filter,PIN_CATEGORY_STILL);
 		}
-
+		AutoReleaseComPtr<IAMStreamConfig> config;
+		if(!mGetIAMStreamConfig(pin,&config.ptr)){
+			throw NyWin32CaptureException();
+		}
+		
 		//自動開放ポインタから切り離す
+		pin.detach(&this->ds_res.sorce.pin);
 		pCapture.detach(&this->ds_res.cap_builder);
 		pF.detach(&this->ds_res.render.filter);
 		pGrab.detach(&this->ds_res.render.grab);
@@ -630,6 +634,7 @@ namespace NyWin32Capture
 			throw NyWin32CaptureException();
 		}
 		//インタフェイスのリリース
+		this->ds_res.sorce.pin->Release();
 		this->ds_res.sorce.config->Release();
 		this->ds_res.graph_builder.graph->Release();
 		this->ds_res.graph_builder.mc->Release();
@@ -647,7 +652,7 @@ namespace NyWin32Capture
 		}
 		o_list.update(this->ds_res.sorce.config);
 	}
-	//i_bufには、this->_capture_format.biSizeImageより大きなサイズのバッファを与えること。
+	//i_bufには、this->_capture_mediatype.lSampleSizeより大きなサイズのバッファを与えること。
 	bool CaptureDevice::captureImage(void* i_buf,long i_buf_size)
 	{
 		if(this->_status!=ST_RUN){
@@ -655,7 +660,7 @@ namespace NyWin32Capture
 		}
 
 		HRESULT hr;
-		long n=i_buf_size==0?this->_capture_format.bmiHeader.biSizeImage:i_buf_size;
+		long n=i_buf_size==0?this->_capture_mediatype.lSampleSize:i_buf_size;
 
 		hr = this->ds_res.render.grab -> GetCurrentBuffer(&n,(long *)i_buf);
 		return SUCCEEDED(hr);
@@ -677,14 +682,23 @@ namespace NyWin32Capture
 		}
 		//サンプルグラバの受け入れフォーマット設定
 		HRESULT hr;
-		hr=this->ds_res.render.grab->SetMediaType(i_format.getMediaType());
+		AM_MEDIA_TYPE am;
+		{
+			const AM_MEDIA_TYPE* am_src=i_format.getMediaType();
+			ZeroMemory(&am, sizeof(AM_MEDIA_TYPE));
+			am.majortype=am_src->majortype;
+			am.subtype=am_src->subtype;
+			am.formattype=FORMAT_VideoInfo;
+		}
+		hr=this->ds_res.render.grab->SetMediaType(&am);
 		if(!SUCCEEDED(hr)){
 			return false;
 		}
 
 		//StreamConfigの設定
 		AM_MEDIA_TYPE* nmt=CreateMediaType(i_format.getMediaType());
-		reinterpret_cast<VIDEOINFOHEADER*>(nmt->pbFormat)->AvgTimePerFrame=(REFERENCE_TIME)(10000000.0/i_rate);
+		VIDEOINFOHEADER* vf=reinterpret_cast<VIDEOINFOHEADER*>(nmt->pbFormat);
+		vf->AvgTimePerFrame=(REFERENCE_TIME)(10000000.0/i_rate);
 		hr=this->ds_res.sorce.config->SetFormat(nmt);
 		if(!SUCCEEDED(hr)){
 			DeleteMediaType(nmt);
@@ -699,6 +713,15 @@ namespace NyWin32Capture
 		}
 		return this->_allocated_res.name;
 	}
+	void* CaptureDevice::getUserValue()const
+	{
+		return this->_user_value;
+	}
+	void CaptureDevice::setUserValue(void* i_user_value)
+	{
+		this->_user_value=i_user_value;
+	}
+
 }
 
 namespace NyWin32Capture

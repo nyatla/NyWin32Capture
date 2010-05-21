@@ -78,10 +78,12 @@ struct ISampleGrabber;
 
 namespace NyWin32Capture
 {
+
 	class CaptureImageCallback;
-
-
-	typedef void (*OnCaptureImage)(BYTE *pBuffer, long BufferLen);
+	class CaptureDevice;
+	/**	コールバック関数
+	*/
+	typedef void (*OnCaptureImage)(const CaptureDevice* i_sender,BYTE *pBuffer, long BufferLen);
 
 
 
@@ -108,16 +110,17 @@ namespace NyWin32Capture
 		const static int ST_RUN=2;
 	private:
 		IMoniker*    _moniker;
-		VIDEOINFOHEADER _capture_format;
+		AM_MEDIA_TYPE _capture_mediatype;
 		struct{
 			struct{
 				IBaseFilter* filter;
 				IAMStreamConfig* config;
-				GUID pin_category;
+//				GUID pin_category;
+				IPin* pin;
 			}sorce;
 			struct{
 				IMediaControl* mc;
-				IGraphBuilder* graph;
+				IFilterGraph2* graph;
 			}graph_builder;
 			ICaptureGraphBuilder2* cap_builder;
 			struct{
@@ -130,6 +133,7 @@ namespace NyWin32Capture
 		}_allocated_res;
 		int _status;
 		CaptureImageCallback* _image_cb;
+		void* _user_value;
 	public:
 		CaptureDevice(IMoniker* i_moniker);
 		virtual ~CaptureDevice();
@@ -155,17 +159,12 @@ namespace NyWin32Capture
 			この関数は、ST_IDLEステータスのときだけ使用可能です。
 		*/
 		bool setVideoFormat(const VideoFormat& i_format,double i_rate);
-		/**	キャプチャ画像のフォーマットを取得します。
-			startCaptureで開始した場合のみ使用できます。
-			この関数は、ST_RUNステータスのときだけ使用可能です。
+		/**	キャプチャ画像メディアタイプを取得します。
 		*/
-		const BITMAPINFOHEADER& getBITMAPINFOHEADER()const;
-		/** キャプチャしているビデオのフォーマットを取得します。
-			この関数は、ST_RUNステータスのときだけ使用可能です。
-		*/
-		const VIDEOINFOHEADER& CaptureDevice::getVIDEOINFOHEADER()const;
+		const AM_MEDIA_TYPE& getMediaType()const;
 
-
+		void* getUserValue()const;
+		void setUserValue(void* i_user_value);
 		const WCHAR* getName()const;
 	};
 }

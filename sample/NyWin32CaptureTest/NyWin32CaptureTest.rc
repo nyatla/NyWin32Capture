@@ -84,7 +84,6 @@ CAPTION "NyWin32CaptureTest"
 FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,263,179,50,14
-    CTEXT           "TODO: ダイアログのコントロールをここに配置",IDC_STATIC,10,96,300,8
     PUSHBUTTON      "Button1",ID_SWITCH,127,179,50,14
 END
 
@@ -146,6 +145,13 @@ BEGIN
 END
 #endif    // APSTUDIO_INVOKED
 
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Bitmap
+//
+
+IDB_BITMAP1             BITMAP                  "res\\bitmap1.bmp"
 #endif    // 日本語 resources
 /////////////////////////////////////////////////////////////////////////////
 

@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#include <assert.h>
 #include "NyWin32Capture.h"
 #include "NyWin32CaptureTest.h"
 #include "NyWin32CaptureTestDlg.h"
@@ -20,6 +21,8 @@ public:
 	CWnd* _wnd;
 	bool is_start;
 	CaptureDeviceList* devlist;
+	CaptureDevice* dev;
+	BITMAPINFOHEADER dibheader;
 public:
 	AppCtrl(CWnd* i_app_window)
 	{
@@ -67,15 +70,35 @@ public:
 		}
 		//イメージフォーマットを設定
 		d->setVideoFormat(*vf,30.0);
-		return NULL;
+		d->setUserValue(NULL);
+		//DIB作るためにヘッダを保存しておく
+		this->dibheader=*(vf->getBitmapInfoHeader());
+		this->dev=d;
+		return true;
 	}
 
 	void OnPushSwitch()
-	{/*
+	{
 		CButton* bn=(CButton*)this->_wnd->GetDlgItem(ID_SWITCH);
-		bn->SetWindowText(this->is_start?_T("stop capture"):_T("start capture"));
 		this->is_start=(!this->is_start);
-	*/	
+		bn->SetWindowText(this->is_start?_T("stop capture"):_T("start capture"));
+		if(this->is_start){
+			dev->startCapture();
+			this->_wnd->SetTimer(123,100,NULL);
+		}else{
+			this->_wnd->KillTimer(123);
+			dev->stopCapture();
+		}
+	}
+	void DrawBitmap(CDC* dc,void* data)
+	{
+		CBitmap bmp;
+		BITMAPINFO bmi;
+		bmi.bmiHeader=this->dibheader;
+		int l=SetDIBitsToDevice(
+			dc->m_hDC,0,0,this->dibheader.biWidth,this->dibheader.biHeight,
+			0,0,0,this->dibheader.biHeight,data,&bmi,DIB_RGB_COLORS);
+		printf("%d",l);
 	}
 };
 
@@ -107,6 +130,7 @@ BEGIN_MESSAGE_MAP(CNyWin32CaptureTestDlg, CDialog)
 	ON_BN_CLICKED(ID_SWITCH, &CNyWin32CaptureTestDlg::OnBnClickedSwitch)
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -149,6 +173,7 @@ void CNyWin32CaptureTestDlg::OnPaint()
 
 		// アイコンの描画
 		dc.DrawIcon(x, y, m_hIcon);
+
 	}
 	else
 	{
@@ -169,7 +194,7 @@ HCURSOR CNyWin32CaptureTestDlg::OnQueryDragIcon()
 void CNyWin32CaptureTestDlg::OnBnClickedSwitch()
 {
 	//開始・停止スイッチを押した
-//	appctrl->OnPushSwitch();
+	appctrl->OnPushSwitch();
 }
 
 void CNyWin32CaptureTestDlg::OnClose()
@@ -184,4 +209,21 @@ void CNyWin32CaptureTestDlg::OnDestroy()
 	delete appctrl;
 	CDialog::OnDestroy();
 	// TODO: ここにメッセージ ハンドラ コードを追加します。
+}
+
+void CNyWin32CaptureTestDlg::OnTimer(UINT_PTR nIDEvent)
+{
+
+	const AM_MEDIA_TYPE& mt=appctrl->dev->getMediaType();
+	BYTE* buf;
+	buf=new BYTE[mt.lSampleSize];
+	appctrl->dev->captureImage(buf);
+	CDC* dc=this->GetDC();
+	appctrl->DrawBitmap(dc,buf);
+	this->ReleaseDC(dc);
+
+
+
+	delete[] buf;
+	CDialog::OnTimer(nIDEvent);
 }

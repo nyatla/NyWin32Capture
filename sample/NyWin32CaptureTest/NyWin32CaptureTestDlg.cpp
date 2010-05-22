@@ -42,9 +42,10 @@ public:
 		CaptureDevice* d=devlist->getDevice(0);
 		d->openDevice();
 		//キャプチャフォーマットを設定
-		SetupCaptureFormat(d);
+		SetupCaptureFormat(d,this->dibheader);
 		//コールバックモードの時に使うユーザ定義値を設定
 		d->setUserValue(this);
+		this->dev=d;
 
 	}
 	virtual ~AppCtrl()
@@ -56,7 +57,7 @@ public:
 
 	}
 	//１番目のカメラをQVGAでキャプチャできるように設定する。
-	bool SetupCaptureFormat(CaptureDevice* d)
+	bool SetupCaptureFormat(CaptureDevice* d,BITMAPINFOHEADER& bmiheader)
 	{
 		//フォーマットリストを得る。
 		VideoFormatList lt;
@@ -70,14 +71,12 @@ public:
 		if(vf==NULL){
 			//カメラがフォーマットを持ってない場合はインテリジェント接続を試す。
 			d->setVideoFormat(320,240,MEDIASUBTYPE_RGB24,30.0);
-			VideoFormat::initBITMAPINFOHEADER(320,240,MEDIASUBTYPE_RGB24,this->dibheader);
+			VideoFormat::initBITMAPINFOHEADER(320,240,MEDIASUBTYPE_RGB24,bmiheader);
 		}else{
 			//カメラがフォーマットを持ってる場合はそのまま使う
 			d->setVideoFormat(*vf,30.0);
-			this->dibheader=*(vf->getBitmapInfoHeader());
+			bmiheader=*(vf->getBitmapInfoHeader());
 		}
-		//DIB作るためにヘッダを保存しておく
-		this->dev=d;
 		return true;
 	}
 	//同期してイメージを取得して、ウインドウに描画

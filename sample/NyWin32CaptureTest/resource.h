@@ -3,6 +3,7 @@
 // Used by NyWin32CaptureTest.rc
 //
 #define IDD_NYWIN32CAPTURETEST_DIALOG   102
+#define IDD_MultiCaptureTEST_DIALOG     102
 #define IDR_MAINFRAME                   128
 #define IDB_BITMAP1                     129
 #define BN_START_STOP                   1000

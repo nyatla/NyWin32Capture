@@ -2,7 +2,7 @@
  * PROJECT: NyWin32Capture
  * --------------------------------------------------------------------------------
  * The MIT License
- * Copyright (c) 2010 nyatla NyARToolkit project
+ * Copyright (c) 2010 R.Iizuka NyARToolkit project
  * airmail(at)ebony.plala.or.jp
  * http://nyatla.jp/nyartoolkit/
  * 

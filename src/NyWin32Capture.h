@@ -2,7 +2,7 @@
  * PROJECT: NyWin32Capture
  * --------------------------------------------------------------------------------
  * The MIT License
- * Copyright (c) 2010 nyatla NyARToolkit project
+ * Copyright (c) 2010 R.Iizuka NyARToolkit project
  * airmail(at)ebony.plala.or.jp
  * http://nyatla.jp/nyartoolkit/
  * 
@@ -69,15 +69,20 @@ namespace NyWin32Capture
 		const GUID& getMediaSubType()const;
 		const AM_MEDIA_TYPE* VideoFormat::getMediaType()const;
 		const VIDEOINFOHEADER* getVideoInfoHeader()const;
+		/**	フォーマットのBITMAPINFOHEADERを返します。
+		*/
 		const BITMAPINFOHEADER* getBitmapInfoHeader()const;
 	public:
-		/*BITMAPINFOHEADERを指定のふぉーまっとで初期化する。*/
+		/**	指定したパラメータで、BITMAPINFOHEADER構造体を初期化します。
+		*/
 		static void initBITMAPINFOHEADER(int i_width,int i_height,const GUID& i_media_subtype,BITMAPINFOHEADER& o_bmih);
 	};
 }
 
 namespace NyWin32Capture
 {
+	/**	このクラスは、Videofirmatのリストを定義します。
+	*/
 	class VideoFormatList
 	{
 	private:
@@ -91,13 +96,21 @@ namespace NyWin32Capture
 		VideoFormatList();
 		void update(IAMStreamConfig* i_config);
 		virtual ~VideoFormatList();
-		/**	この関数は、指定したフォーマットに合致するVideoFormatをリストから検索します。
+		/**	この関数は、指定したフォーマット(幅、高さ、メディアサブタイプ)に合致するVideoFormatをリストから検索します。
 			見つかったれば、そのフォーマットへのポインタを返します。
 			見つからなければ、NULLを返します。
 		*/
 		const VideoFormat* getFormat(int i_width,int i_height,const GUID& i_media_type)const;
+		/**	この関数は、指定したフォーマット(幅、高さ)に合致するVideoFormatをリストから検索します。
+			見つかったれば、そのフォーマットへのポインタを返します。
+			見つからなければ、NULLを返します。
+		*/
 		const VideoFormat* getFormat(int i_width,int i_height)const;
+		/**	この関数は、i_index番目のVideoFormatを返します。
+		*/
 		const VideoFormat* getFormat(int i_index)const;
+		/**	リストが所有するVideoFormatの数を返します。
+		*/
 		int getNumberOfFormat()const;
 	};
 }
@@ -111,7 +124,8 @@ namespace NyWin32Capture
 
 	class CaptureImageCallback;
 	class CaptureDevice;
-	/**	コールバック関数
+	/**	startCaptureCallbackが呼び出すコールバック関数です。
+		この関数の中からStart,Stop等の関数を呼び出さないでください。
 	*/
 	typedef void (*OnCaptureImage)(const CaptureDevice* i_sender,BYTE *pBuffer, long BufferLen);
 
@@ -224,6 +238,8 @@ namespace NyWin32Capture
 
 namespace NyWin32Capture
 {
+	/**	このクラスは、キャプチャデバイスのリストを定義し、キャプチャデバイスを所有します。
+	*/
 	class CaptureDeviceList
 	{
 	private:

@@ -68,12 +68,14 @@ public:
 		//イメージのフォーマットを設定。このタイプはuuids.hに書いてある。
 		const VideoFormat* vf=lt.getFormat(320,240,MEDIASUBTYPE_RGB24);
 		if(vf==NULL){
-			return "The device has not 320,240,MEDIASUBTYPE_RGB24,30.0 format.";
+			d->setVideoFormat(320,240,MEDIASUBTYPE_RGB24,30.0);
+			VideoFormat::initBITMAPINFOHEADER(320,240,MEDIASUBTYPE_RGB24,this->dibheader);
+		}else{
+			//イメージフォーマットを設定
+			d->setVideoFormat(*vf,30.0);
+			this->dibheader=*(vf->getBitmapInfoHeader());
 		}
-		//イメージフォーマットを設定
-		d->setVideoFormat(*vf,30.0);
 		//DIB作るためにヘッダを保存しておく
-		this->dibheader=*(vf->getBitmapInfoHeader());
 		this->dev=d;
 		return true;
 	}
@@ -227,20 +229,20 @@ void CNyWin32CaptureTestDlg::OnBnClickedSwitch()
 	CButton* bn=(CButton*)this->GetDlgItem(ID_SWITCH);
 	this->is_start=(!this->is_start);
 	bn->SetWindowText(this->is_start?_T("stop capture"):_T("start capture"));
-/*	同期実行テスト*/
+/*	//同期実行テスト
 	if(this->is_start){
 		appctrl->Start(false);
 		this->SetTimer(123,100,NULL);
 	}else{
 		this->KillTimer(123);
 		appctrl->Stop();
-	}
-/*	//非同期試験ならこっち
+	}*/
+	//非同期試験ならこっち
 	if(this->is_start){
 		appctrl->Start(true);
 	}else{
 		appctrl->Stop();
-	}*/
+	}
 }
 
 void CNyWin32CaptureTestDlg::OnClose()

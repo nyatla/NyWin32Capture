@@ -324,7 +324,7 @@ namespace NyWin32Capture
 	{
 		return 10000000.0/((double)reinterpret_cast<VIDEOINFOHEADER*>(this->_pmt->pbFormat)->AvgTimePerFrame);
 	}
-	const GUID& VideoFormat::getFormat()const
+	const GUID& VideoFormat::getMediaSubType()const
 	{
 		return this->_pmt->subtype;
 	}
@@ -339,6 +339,28 @@ namespace NyWin32Capture
 	const BITMAPINFOHEADER* VideoFormat::getBitmapInfoHeader()const
 	{
 		return &(reinterpret_cast<VIDEOINFOHEADER*>(this->_pmt->pbFormat)->bmiHeader);
+	}
+	void VideoFormat::initBITMAPINFOHEADER(int i_width,int i_height,const GUID& i_media_subtype,BITMAPINFOHEADER& o_bmih)
+	{
+		int bi_count;
+		if(IsEqualGUID(i_media_subtype,MEDIASUBTYPE_RGB24)){
+			bi_count=24;
+		}else if(i_media_subtype==MEDIASUBTYPE_RGB32){
+			bi_count=32;
+		}else{
+			throw NyWin32CaptureException();
+		}
+		o_bmih.biSize=sizeof(BITMAPINFOHEADER);
+		o_bmih.biWidth=i_width;
+		o_bmih.biHeight=i_height;
+		o_bmih.biPlanes=1;
+		o_bmih.biBitCount=bi_count;
+		o_bmih.biCompression=0;
+		o_bmih.biSizeImage=i_width*i_height*(bi_count/8);
+		o_bmih.biXPelsPerMeter=0;
+		o_bmih.biYPelsPerMeter=0;
+		o_bmih.biClrUsed=0;
+		o_bmih.biClrImportant=0;
 	}
 }
 
@@ -414,7 +436,26 @@ namespace NyWin32Capture
 			{
 				continue;
 			}
-			if(i_format!=f->getFormat())
+			if(i_format!=f->getMediaSubType())
+			{
+				continue;
+			}
+			return f;
+		}
+		return NULL;
+	}
+	const VideoFormat* VideoFormatList::getFormat(int i_width,int i_height)const
+	{
+		//一致するそれっぽいのを探す。
+		int l=(int)this->_list->size();
+		for(int i=0;i<l;i++){
+			const VideoFormat* f=((*this->_list)[i]);
+			const VIDEOINFOHEADER* v=f->getVideoInfoHeader();
+			if(i_width!=v->bmiHeader.biWidth)
+			{
+				continue;
+			}
+			if(i_height!=v->bmiHeader.biHeight)
 			{
 				continue;
 			}
@@ -430,6 +471,9 @@ namespace NyWin32Capture
 	{
 		return (int)this->_list->size();
 	}
+
+
+
 }
 
 
@@ -689,38 +733,48 @@ namespace NyWin32Capture
 		hr = this->ds_res.render.grab -> GetCurrentBuffer(&n,(long *)i_buf);
 		return SUCCEEDED(hr);
 	}
-	bool CaptureDevice::setVideoFormat(int i_width,int i_height,GUID i_format,double i_rate)
+	bool CaptureDevice::setVideoFormat(int i_width,int i_height,const GUID& i_media_subtype,double i_rate)
 	{
 		if(this->_status!=ST_IDLE){
 			throw NyWin32CaptureException();
 		}
 		VideoFormatList list;
 		this->getVideoFormatList(list);
-		const VideoFormat* vf=list.getFormat(i_width,i_height,i_format);
-		return this->setVideoFormat(*vf,i_rate);
+		const VideoFormat* vf;
+		//サポートしてるフォーマットを検索
+		vf=list.getFormat(i_width,i_height,i_media_subtype);
+		bool result;
+		if(vf!=NULL){
+			result=this->setVideoFormat(*vf,i_rate);
+		}else{
+			vf=list.getFormat(i_width,i_height);
+			if(vf==NULL){
+				result=false;
+			}
+			result=this->setVideoFormat(*vf,i_media_subtype,i_rate);
+		}
+		return result;
 	}
 	bool CaptureDevice::setVideoFormat(const VideoFormat& i_format,double i_rate)
+	{
+		return setVideoFormat(i_format,i_format.getMediaType()->subtype,i_rate);
+	}
+	bool CaptureDevice::setVideoFormat(const VideoFormat& i_format,const GUID& i_media_subtype,double i_rate)
 	{
 		if(this->_status!=ST_IDLE){
 			throw NyWin32CaptureException();
 		}
 		//サンプルグラバの受け入れフォーマット設定
 		HRESULT hr;
-		AM_MEDIA_TYPE am;
-		{
-			const AM_MEDIA_TYPE* am_src=i_format.getMediaType();
-			ZeroMemory(&am, sizeof(AM_MEDIA_TYPE));
-			am.majortype=am_src->majortype;
-			am.subtype=am_src->subtype;
-			am.formattype=FORMAT_VideoInfo;
-		}
-		hr=this->ds_res.render.grab->SetMediaType(&am);
+		AM_MEDIA_TYPE* nmt=CreateMediaType(i_format.getMediaType());
+		nmt->subtype=i_media_subtype;
+		hr=this->ds_res.render.grab->SetMediaType(nmt);
 		if(!SUCCEEDED(hr)){
+			DeleteMediaType(nmt);
 			return false;
 		}
-
 		//StreamConfigの設定
-		AM_MEDIA_TYPE* nmt=CreateMediaType(i_format.getMediaType());
+		nmt->subtype=i_format.getMediaSubType();
 		VIDEOINFOHEADER* vf=reinterpret_cast<VIDEOINFOHEADER*>(nmt->pbFormat);
 		vf->AvgTimePerFrame=(REFERENCE_TIME)(10000000.0/i_rate);
 		hr=this->ds_res.sorce.config->SetFormat(nmt);
@@ -728,6 +782,7 @@ namespace NyWin32Capture
 			DeleteMediaType(nmt);
 			return false;
 		}
+		DeleteMediaType(nmt);
 		return true;
 	}
 	const WCHAR* CaptureDevice::getName()const

@@ -66,10 +66,13 @@ namespace NyWin32Capture
 		int getWidth()const;
 		int getHeight()const;
 		double getRate()const;
-		const GUID& getFormat()const;
+		const GUID& getMediaSubType()const;
 		const AM_MEDIA_TYPE* VideoFormat::getMediaType()const;
 		const VIDEOINFOHEADER* getVideoInfoHeader()const;
 		const BITMAPINFOHEADER* getBitmapInfoHeader()const;
+	public:
+		/*BITMAPINFOHEADERを指定のふぉーまっとで初期化する。*/
+		static void initBITMAPINFOHEADER(int i_width,int i_height,const GUID& i_media_subtype,BITMAPINFOHEADER& o_bmih);
 	};
 }
 
@@ -92,7 +95,8 @@ namespace NyWin32Capture
 			見つかったれば、そのフォーマットへのポインタを返します。
 			見つからなければ、NULLを返します。
 		*/
-		const VideoFormat* getFormat(int i_width,int i_height,const GUID& i_format)const;
+		const VideoFormat* getFormat(int i_width,int i_height,const GUID& i_media_type)const;
+		const VideoFormat* getFormat(int i_width,int i_height)const;
 		const VideoFormat* getFormat(int i_index)const;
 		int getNumberOfFormat()const;
 	};
@@ -192,11 +196,16 @@ namespace NyWin32Capture
 		/** キャプチャイメージのフォーマットを指定します。
 			この関数は、ST_IDLEステータスのときだけ使用可能です。
 		*/
-		bool setVideoFormat(int i_width,int i_height,GUID i_format,double i_rate);
+		bool setVideoFormat(int i_width,int i_height,const GUID& i_media_subtype,double i_rate);
 		/** キャプチャイメージのフォーマットを指定します。
 			この関数は、ST_IDLEステータスのときだけ使用可能です。
 		*/
 		bool setVideoFormat(const VideoFormat& i_format,double i_rate);
+		/** i_formatのmedia_subtypeフィールドを強制してキャプチャイメージのフォーマットを指定します。
+			この関数は、ST_IDLEステータスのときだけ使用可能です。
+		*/
+		bool setVideoFormat(const VideoFormat& i_format,const GUID& i_media_subtype,double i_rate);
+
 		/**	キャプチャ画像メディアタイプを取得します。
 		*/
 		const AM_MEDIA_TYPE& getMediaType()const;

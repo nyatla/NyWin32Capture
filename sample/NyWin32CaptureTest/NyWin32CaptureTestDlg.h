@@ -28,8 +28,11 @@ protected:
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	afx_msg LRESULT OnASyncCapture(UINT wParam,LONG lParam);
 	afx_msg void OnBnClickedSwitch();
 	afx_msg void OnClose();
 	afx_msg void OnDestroy();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+private:
+	bool is_start;
 };

@@ -44,7 +44,6 @@ BOOL CNyWin32CaptureTestApp::InitInstance()
 	// ‚±‚ê‚ğİ’è‚µ‚Ü‚·B
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
-
 	CWinApp::InitInstance();
 
 	// •W€‰Šú‰»

@@ -14,48 +14,50 @@
 
 using namespace NyWin32Capture;
 
-
+/*	アプリケーションコントローラ
+*/
 class AppCtrl
 {
 public:
 	CWnd* _wnd;
-	bool is_start;
 	CaptureDeviceList* devlist;
 	CaptureDevice* dev;
 	BITMAPINFOHEADER dibheader;
 public:
 	AppCtrl(CWnd* i_app_window)
 	{
-		CoInitialize(NULL);					// COMの初期化		
+		CoInitialize(NULL);
+
 		this->_wnd=i_app_window;
-		this->is_start=false;
 		CButton* bn=(CButton*)_wnd->GetDlgItem(ID_SWITCH);
 		bn->SetWindowText(_T("start capture"));
 		//カメラキャプチャデバイスのリストを作る。
 		devlist=new CaptureDeviceList();
-		SetupCamera1();
-
-	}
-	virtual ~AppCtrl()
-	{
-		//カメラキャプチャデバイスのリストを開放
-		delete devlist;
-
-		CoUninitialize();
-	}
-	//	キャプチャデバイスをオープンして、１番目のカメラをQVGAでキャプチャできるように
-	//	設定する。
-	//
-	bool SetupCamera1()
-	{
-		//キャプチャデバイスのリストを読む
+		//キャプチャデバイスのリストから1番目のカメラを得る。
 		int nod=this->devlist->getNumberOfDevice();
 		if(nod<1){
-			return "This computer has not Capture device.";
+			throw std::exception("This computer has not Capture device.");
 		}
 		//0番目のカメラをあける。
 		CaptureDevice* d=devlist->getDevice(0);
 		d->openDevice();
+		//キャプチャフォーマットを設定
+		SetupCaptureFormat(d);
+		//コールバックモードの時に使うユーザ定義値を設定
+		d->setUserValue(this);
+
+	}
+	virtual ~AppCtrl()
+	{
+		delete devlist;
+		//カメラキャプチャデバイスのリストを開放
+		CoUninitialize();
+
+
+	}
+	//１番目のカメラをQVGAでキャプチャできるように設定する。
+	bool SetupCaptureFormat(CaptureDevice* d)
+	{
 		//フォーマットリストを得る。
 		VideoFormatList lt;
 		d->getVideoFormatList(lt);
@@ -70,38 +72,63 @@ public:
 		}
 		//イメージフォーマットを設定
 		d->setVideoFormat(*vf,30.0);
-		d->setUserValue(NULL);
 		//DIB作るためにヘッダを保存しておく
 		this->dibheader=*(vf->getBitmapInfoHeader());
 		this->dev=d;
 		return true;
 	}
-
-	void OnPushSwitch()
+	//同期してイメージを取得して、ウインドウに描画
+	void DrawBitmap()
 	{
-		CButton* bn=(CButton*)this->_wnd->GetDlgItem(ID_SWITCH);
-		this->is_start=(!this->is_start);
-		bn->SetWindowText(this->is_start?_T("stop capture"):_T("start capture"));
-		if(this->is_start){
-			dev->startCapture();
-			this->_wnd->SetTimer(123,100,NULL);
-		}else{
-			this->_wnd->KillTimer(123);
-			dev->stopCapture();
-		}
+		//イメージを同期取得
+		const AM_MEDIA_TYPE& mt=dev->getMediaType();
+		BYTE* buf;
+		buf=new BYTE[mt.lSampleSize];
+		this->dev->captureImage(buf);
+		//描画
+		DrawBitmap(buf);
+		delete[] buf;
 	}
-	void DrawBitmap(CDC* dc,void* data)
+	//dataの内容をウインドウに描画
+	void DrawBitmap(void* data)
 	{
+		//DIB→BITMAPに変換して描画
+		CDC* dc=this->_wnd->GetDC();
 		CBitmap bmp;
 		BITMAPINFO bmi;
 		bmi.bmiHeader=this->dibheader;
 		int l=SetDIBitsToDevice(
 			dc->m_hDC,0,0,this->dibheader.biWidth,this->dibheader.biHeight,
 			0,0,0,this->dibheader.biHeight,data,&bmi,DIB_RGB_COLORS);
-		printf("%d",l);
+		this->_wnd->ReleaseDC(dc);
+	}
+	void Start(bool is_async)
+	{
+		if(!is_async){
+			this->dev->startCapture();	//同期取得の実験ならこっち
+		}else{
+			this->dev->startCaptureCallback(AppCtrl::OnCaptureImage);		//非同期取得の実験ならこっち
+		}
+	}
+	void Stop()
+	{
+		this->dev->stopCapture();
+	}
+	static void OnCaptureImage(const CaptureDevice* i_sender,BYTE *pBuffer, long BufferLen)
+	{
+		//SendMessageで飛ばす
+		AppCtrl* inst=(AppCtrl*)(i_sender->getUserValue());
+		DWORD ret;
+		//GDIと同期をとるときにデットロックする可能性があるから。
+		if(SendMessageTimeout(inst->_wnd->m_hWnd,WM_USER+39,0,(LPARAM)pBuffer,SMTO_ABORTIFHUNG,1000,&ret)==0){
+			OutputDebugString(_T("Error on SendMessageTimeout"));
+		}
 	}
 };
 
+
+//クラスを公開したくないのでグローバル変数にしてあるけど、実際は
+//親クラスのメンバにした方がよいです。
 AppCtrl* appctrl;
 
 
@@ -131,6 +158,7 @@ BEGIN_MESSAGE_MAP(CNyWin32CaptureTestDlg, CDialog)
 	ON_WM_CLOSE()
 	ON_WM_DESTROY()
 	ON_WM_TIMER()
+    ON_MESSAGE((WM_USER+39),CNyWin32CaptureTestDlg::OnASyncCapture)//キャプチャ
 END_MESSAGE_MAP()
 
 
@@ -146,6 +174,8 @@ BOOL CNyWin32CaptureTestDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 小さいアイコンの設定
 
 	// TODO: 初期化をここに追加します。
+	this->is_start=false;
+
 	appctrl=new AppCtrl(this);
 
 	return TRUE;  // フォーカスをコントロールに設定した場合を除き、TRUE を返します。
@@ -190,11 +220,27 @@ HCURSOR CNyWin32CaptureTestDlg::OnQueryDragIcon()
 
 
 
-
+//ボタンが押されたとき
 void CNyWin32CaptureTestDlg::OnBnClickedSwitch()
 {
-	//開始・停止スイッチを押した
-	appctrl->OnPushSwitch();
+	//キャプチャON→OFFの切り替え
+	CButton* bn=(CButton*)this->GetDlgItem(ID_SWITCH);
+	this->is_start=(!this->is_start);
+	bn->SetWindowText(this->is_start?_T("stop capture"):_T("start capture"));
+/*	同期実行テスト*/
+	if(this->is_start){
+		appctrl->Start(false);
+		this->SetTimer(123,100,NULL);
+	}else{
+		this->KillTimer(123);
+		appctrl->Stop();
+	}
+/*	//非同期試験ならこっち
+	if(this->is_start){
+		appctrl->Start(true);
+	}else{
+		appctrl->Stop();
+	}*/
 }
 
 void CNyWin32CaptureTestDlg::OnClose()
@@ -213,17 +259,13 @@ void CNyWin32CaptureTestDlg::OnDestroy()
 
 void CNyWin32CaptureTestDlg::OnTimer(UINT_PTR nIDEvent)
 {
-
-	const AM_MEDIA_TYPE& mt=appctrl->dev->getMediaType();
-	BYTE* buf;
-	buf=new BYTE[mt.lSampleSize];
-	appctrl->dev->captureImage(buf);
-	CDC* dc=this->GetDC();
-	appctrl->DrawBitmap(dc,buf);
-	this->ReleaseDC(dc);
-
-
-
-	delete[] buf;
+	appctrl->DrawBitmap();
 	CDialog::OnTimer(nIDEvent);
+}
+//SendMessageで飛ばしたメッセージの受け口
+LRESULT CNyWin32CaptureTestDlg::OnASyncCapture(WPARAM wParam, LPARAM lParam )
+{
+	//あーこれ64bitポインタだとまずくない？
+	appctrl->DrawBitmap((void*)lParam);
+	return 0;
 }

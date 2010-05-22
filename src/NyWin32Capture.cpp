@@ -1,3 +1,29 @@
+/* 
+ * PROJECT: NyWin32Capture
+ * --------------------------------------------------------------------------------
+ * The MIT License
+ * Copyright (c) 2010 nyatla NyARToolkit project
+ * airmail(at)ebony.plala.or.jp
+ * http://nyatla.jp/nyartoolkit/
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * 
+ */
 #include "NyWin32Capture.h"
 #include <dshow.h>
 #include <stdio.h>
@@ -64,14 +90,12 @@ namespace NyWin32Capture
 		{
 			return this->ptr;
 		}
-		void detach(T** o_ptr)
+		T* detach()
 		{
-			if(o_ptr!=NULL){
-				*o_ptr=this->ptr;
-			}else{
-				this->ptr->Release();
-			}
+			T* ret;
+			ret=this->ptr;
 			this->ptr=NULL;
+			return ret;
 		}
 		void release()
 		{
@@ -137,7 +161,7 @@ namespace NyWin32Capture
 				continue;
 			}
 			IPin* result;
-			pPin.detach(&result);
+			result=pPin.detach();
 			return result;
 		}
 		return NULL;  
@@ -164,7 +188,7 @@ namespace NyWin32Capture
 
 				if(Category==pin_category)
 				{
-					return pPin;
+					return pPin.detach();
 				}
 				pPin.release();
 			}
@@ -244,6 +268,7 @@ namespace NyWin32Capture
 		// コンストラクタ
 		CaptureImageCallback(CaptureDevice* i_sender,OnCaptureImage i_callback) : CUnknown("SGCB", NULL)
 		{
+			this->_sender=i_sender;
 			this->_callback=i_callback;
 		}
 
@@ -451,8 +476,7 @@ namespace NyWin32Capture
 		this->_moniker->Release();
 		this->ds_res.sorce.filter->Release();
 	}
-
-	void CaptureDevice::startCapture()
+	void CaptureDevice::mStartCapture(BOOL i_set_bffer_samples)
 	{
 		//状態チェック
 		if(this->_status!=ST_IDLE){
@@ -476,7 +500,7 @@ namespace NyWin32Capture
 		FreeMediaType(this->_capture_mediatype);
 
 		//レンダラの開始
-		hr=this->ds_res.render.grab->SetBufferSamples(TRUE);	// グラブ開始
+		hr=this->ds_res.render.grab->SetBufferSamples(i_set_bffer_samples);	// グラブ開始
 		if(!SUCCEEDED(hr)){
 			throw NyWin32CaptureException();
 		}
@@ -489,6 +513,11 @@ namespace NyWin32Capture
 		this->_status=ST_RUN;
 		return;
 	}
+	void CaptureDevice::startCapture()
+	{
+		mStartCapture(TRUE);
+	}
+
 	void CaptureDevice::startCaptureCallback(OnCaptureImage i_callback)
 	{
 		assert(i_callback!=NULL);
@@ -502,12 +531,14 @@ namespace NyWin32Capture
 			//コールバックをセットする。
 			this->_image_cb=new CaptureImageCallback(this,i_callback);
 			hr=this->ds_res.render.grab->SetCallback(this->_image_cb,1);
+			hr=this->ds_res.render.grab->SetBufferSamples(FALSE);
 		}catch(...){
 			//失敗したときはコールバック関連のオブジェクトを削除
 			this->ds_res.render.grab->SetCallback(NULL,1);
 			this->_image_cb->Release();
 			this->_image_cb=NULL;
 		}
+		mStartCapture(FALSE);
 	}
 
 	void CaptureDevice::stopCapture()
@@ -519,16 +550,16 @@ namespace NyWin32Capture
 		//HRESULTチェックしてないところがある。
 		HRESULT hr;
 
-		//停止処理
-		hr=this->ds_res.graph_builder.mc->Stop();
-		hr=this->ds_res.render.grab->SetBufferSamples(FALSE);
-
+		//フィルタを止める
+		hr=this->ds_res.graph_builder.mc->Pause();
 		//コールバックが指定されていれば解除
 		if(this->_image_cb!=NULL){
 			this->ds_res.render.grab->SetCallback(NULL,1);
-			this->_image_cb->Release();
 			this->_image_cb=NULL;
 		}
+		//停止処理
+		hr=this->ds_res.graph_builder.mc->Stop();
+
 		//フィルタ内の全pinを切断
 		mDisconnectAll(this->ds_res.graph_builder.graph);
 
@@ -568,8 +599,8 @@ namespace NyWin32Capture
 		}
 
 		//キャプチャグラフを作る  
-		AutoReleaseComPtr<IFilterGraph2> pGraph;
-		hr=CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC,IID_IFilterGraph2, (void **) &(pGraph.ptr));
+		AutoReleaseComPtr<IGraphBuilder> pGraph;
+		hr=CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC,IID_IGraphBuilder , (void **) &(pGraph.ptr));
 		if(!SUCCEEDED(hr)){
 			throw NyWin32CaptureException();
 		}
@@ -579,14 +610,6 @@ namespace NyWin32Capture
 		if(!SUCCEEDED(hr)){
 			throw NyWin32CaptureException();
 		}
-
-		//CaptureGraphBuilderを作成
-		AutoReleaseComPtr<ICaptureGraphBuilder2> pCapture;
-		hr=CoCreateInstance( CLSID_CaptureGraphBuilder2 , NULL, CLSCTX_INPROC,IID_ICaptureGraphBuilder2, (void **) &(pCapture.ptr));
-		if(!SUCCEEDED(hr)){
-			throw NyWin32CaptureException();
-		}
-
 		// キャプチャフィルタをフィルタグラフに追加
 		hr=pGraph -> AddFilter(this->ds_res.sorce.filter, L"CaptureFilter");
 		if(!SUCCEEDED(hr)){
@@ -595,12 +618,6 @@ namespace NyWin32Capture
 
 		//サンプルグラバの追加
 		hr=pGraph -> AddFilter(pF, L"SampleGrabber");
-		if(!SUCCEEDED(hr)){
-			throw NyWin32CaptureException();
-		}
-
-		//フィルタグラフをキャプチャグラフに組み込む
-		hr=pCapture -> SetFiltergraph(pGraph);
 		if(!SUCCEEDED(hr)){
 			throw NyWin32CaptureException();
 		}
@@ -615,15 +632,18 @@ namespace NyWin32Capture
 		if(!mGetIAMStreamConfig(pin,&config.ptr)){
 			throw NyWin32CaptureException();
 		}
-		
+
+	
 		//自動開放ポインタから切り離す
-		pin.detach(&this->ds_res.sorce.pin);
-		pCapture.detach(&this->ds_res.cap_builder);
-		pF.detach(&this->ds_res.render.filter);
-		pGrab.detach(&this->ds_res.render.grab);
-		config.detach(&this->ds_res.sorce.config);
-		pGraph.detach(&this->ds_res.graph_builder.graph);
-		pMC.detach(&this->ds_res.graph_builder.mc);
+		this->ds_res.render.filter=pF.detach();
+		this->ds_res.render.grab=pGrab.detach();
+
+		this->ds_res.graph_builder.graph=pGraph.detach();
+		this->ds_res.graph_builder.mc=pMC.detach();
+
+		this->ds_res.sorce.pin=pin.detach();
+		this->ds_res.sorce.config=config.detach();
+
 		this->_status=ST_IDLE;
 		return;
 	}
@@ -634,13 +654,14 @@ namespace NyWin32Capture
 			throw NyWin32CaptureException();
 		}
 		//インタフェイスのリリース
-		this->ds_res.sorce.pin->Release();
-		this->ds_res.sorce.config->Release();
-		this->ds_res.graph_builder.graph->Release();
-		this->ds_res.graph_builder.mc->Release();
-		this->ds_res.render.grab->Release();
-		this->ds_res.render.filter->Release();
-		this->ds_res.cap_builder->Release();
+		DWORD d;
+		d=this->ds_res.sorce.config->Release();
+		d=this->ds_res.sorce.pin->Release();
+		d=this->ds_res.graph_builder.mc->Release();
+		d=this->ds_res.graph_builder.graph->Release();
+		d=this->ds_res.render.filter->Release();
+		d=this->ds_res.render.grab->Release();
+
 		this->_status=ST_CLOSED;
 	}
 
@@ -656,6 +677,9 @@ namespace NyWin32Capture
 	bool CaptureDevice::captureImage(void* i_buf,long i_buf_size)
 	{
 		if(this->_status!=ST_RUN){
+			throw NyWin32CaptureException();
+		}
+		if(this->_image_cb!=NULL){
 			throw NyWin32CaptureException();
 		}
 

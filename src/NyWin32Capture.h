@@ -1,3 +1,29 @@
+/* 
+ * PROJECT: NyWin32Capture
+ * --------------------------------------------------------------------------------
+ * The MIT License
+ * Copyright (c) 2010 nyatla NyARToolkit project
+ * airmail(at)ebony.plala.or.jp
+ * http://nyatla.jp/nyartoolkit/
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ * 
+ */
 #pragma once
 #include <exception>
 #include <vector>
@@ -115,14 +141,12 @@ namespace NyWin32Capture
 			struct{
 				IBaseFilter* filter;
 				IAMStreamConfig* config;
-//				GUID pin_category;
 				IPin* pin;
 			}sorce;
 			struct{
 				IMediaControl* mc;
-				IFilterGraph2* graph;
+				IGraphBuilder* graph;
 			}graph_builder;
-			ICaptureGraphBuilder2* cap_builder;
 			struct{
 				IBaseFilter* filter;
 				ISampleGrabber* grab;
@@ -134,13 +158,27 @@ namespace NyWin32Capture
 		int _status;
 		CaptureImageCallback* _image_cb;
 		void* _user_value;
+		void mStartCapture(BOOL i_set_bffer_samples);
 	public:
 		CaptureDevice(IMoniker* i_moniker);
 		virtual ~CaptureDevice();
+		/**	同期モードでキャプチャ処理をスタートします。
+			この関数で開始したキャプチャは、captureImage関数でイメージを取得することができます。
+		*/
 		void startCapture();
+		/**	非同期モードでキャプチャ処理をスタートします。
+			この関数で開始したキャプチャは、イメージをi_callback関数に非同期で通知します。
+			captureImage関数を使うことはできません。
+		*/
 		void startCaptureCallback(OnCaptureImage i_callback);
+		/**	キャプチャを停止しします。
+		*/
 		void stopCapture();
+		/**	キャプチャデバイスをオープンします。
+		*/
 		void openDevice();
+		/**	キャプチャデバイスをクローズします。
+		*/
 		void closeDevice();
 		/** デバイスの提供できるビデオフォーマットの一覧を、o_list引数に返します。
 			この関数は、ST_IDLE,ST_RUNステータスのときだけ使用可能です。
@@ -148,7 +186,7 @@ namespace NyWin32Capture
 		void getVideoFormatList(VideoFormatList& o_list)const;
 		/** キャプチャイメージを取得します。
 			この関数は、startCaptureからしばらくの間失敗することがあります。
-			この関数は、ST_RUNステータスのときだけ使用可能です。
+			この関数は、startCaptureで開始し、かつST_RUNステータスのときだけ使用可能です。
 		*/
 		bool captureImage(void* i_buf,long i_buf_size=0);
 		/** キャプチャイメージのフォーマットを指定します。
@@ -162,9 +200,15 @@ namespace NyWin32Capture
 		/**	キャプチャ画像メディアタイプを取得します。
 		*/
 		const AM_MEDIA_TYPE& getMediaType()const;
-
+		/**	ユーザ定義値を取得します。
+		*/
 		void* getUserValue()const;
+		/**	ユーザ定義値を設定します。この値は、getUserValueで取得できます。
+			非同期関数に任意の値を渡したいときに使用します。
+		*/
 		void setUserValue(void* i_user_value);
+		/**	このデバイスの値を取得します。
+		*/
 		const WCHAR* getName()const;
 	};
 }

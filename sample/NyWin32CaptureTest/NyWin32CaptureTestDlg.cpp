@@ -68,10 +68,11 @@ public:
 		//イメージのフォーマットを設定。このタイプはuuids.hに書いてある。
 		const VideoFormat* vf=lt.getFormat(320,240,MEDIASUBTYPE_RGB24);
 		if(vf==NULL){
+			//カメラがフォーマットを持ってない場合はインテリジェント接続を試す。
 			d->setVideoFormat(320,240,MEDIASUBTYPE_RGB24,30.0);
 			VideoFormat::initBITMAPINFOHEADER(320,240,MEDIASUBTYPE_RGB24,this->dibheader);
 		}else{
-			//イメージフォーマットを設定
+			//カメラがフォーマットを持ってる場合はそのまま使う
 			d->setVideoFormat(*vf,30.0);
 			this->dibheader=*(vf->getBitmapInfoHeader());
 		}

@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Include&quot;;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (August 2009)\Include&quot;;../extlib/BaseClassesWin32"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses&quot;;../inc"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -103,7 +103,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Include&quot;;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (August 2009)\Include&quot;;../extlib/BaseClassesWin32"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses&quot;;../inc"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
@@ -165,7 +165,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="3"
-				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Include&quot;;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (August 2009)\Include&quot;;../extlib/BaseClassesWin32"
+				AdditionalIncludeDirectories="&quot;C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses&quot;;../inc"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="0"
@@ -214,6 +214,10 @@
 				RelativePath="..\src\NyWin32Capture.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\src\qedit_def.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="ヘッダー ファイル"
@@ -221,7 +225,7 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
-				RelativePath="..\src\NyWin32Capture.h"
+				RelativePath="..\inc\NyWin32Capture.h"
 				>
 			</File>
 		</Filter>
@@ -235,267 +239,263 @@
 			Name="baseclass"
 			>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\amextra.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\amextra.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\amextra.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\amextra.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\amfilter.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\amfilter.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\amfilter.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\amfilter.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\amvideo.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\amvideo.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\arithutil.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\arithutil.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\cache.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\cache.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\checkbmi.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\checkbmi.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\combase.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\combase.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\combase.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\combase.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\cprop.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\cprop.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\cprop.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\cprop.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\ctlutil.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\ctlutil.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\ctlutil.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\ctlutil.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\ddmm.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\ddmm.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\ddmm.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\ddmm.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\dschedule.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\dxmperf.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\dxmperf.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\fourcc.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\fourcc.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\measure.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\measure.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\msgthrd.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\msgthrd.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\mtype.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\mtype.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\mtype.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\mtype.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\outputq.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\outputq.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\outputq.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\outputq.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\perflog.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\perflog.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\perflog.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\perflog.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\perfstruct.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\perfstruct.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\pstream.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\pstream.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\pstream.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\pstream.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\pullpin.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\pullpin.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\pullpin.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\pullpin.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\refclock.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\readme.txt"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\refclock.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\refclock.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\reftime.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\refclock.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\renbase.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\reftime.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\renbase.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\renbase.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\schedule.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\renbase.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\schedule.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\schedule.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\seekpt.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\seekpt.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\seekpt.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\seekpt.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\source.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\source.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\source.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\source.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\streams.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\streams.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\strmctl.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\strmctl.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\strmctl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\strmctl.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\sysclock.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\sysclock.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\sysclock.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\sysclock.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\transfrm.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\transfrm.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\transfrm.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\transfrm.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\transip.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\transip.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\transip.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\transip.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\videoctl.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\videoctl.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\videoctl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\videoctl.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\vtrans.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\vtrans.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\vtrans.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\vtrans.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\winctrl.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\winctrl.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\winctrl.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\winctrl.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\winutil.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\winutil.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\winutil.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\winutil.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\wxdebug.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\wxdebug.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\wxdebug.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\wxdebug.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\wxlist.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\wxlist.cpp"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\wxlist.h"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\wxlist.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\wxutil.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\extlib\BaseClassesWin32\wxutil.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\extlib\BaseClassesWin32\wxutil.h"
+				RelativePath="C:\Program Files\Microsoft SDKs\Windows\v7.1\Samples\multimedia\directshow\baseclasses\wxutil.h"
 				>
 			</File>
 		</Filter>

@@ -45,7 +45,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../src/;&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Include&quot;;&quot;C:\Program Files (x86)\Microsoft DirectX SDK (August 2009)\Include&quot;;&quot;C:\Program Files\Microsoft SDKs\Windows\v7.0\Samples\multimedia\directshow\baseclasses&quot;"
+				AdditionalIncludeDirectories="../../inc/"
 				PreprocessorDefinitions="WIN32;_WINDOWS;_DEBUG"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -68,7 +68,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmiids.lib strmbasd.lib WinMM.Lib"
+				AdditionalDependencies="strmiids.lib WinMM.Lib"
 				LinkIncremental="2"
 				IgnoreAllDefaultLibraries="false"
 				GenerateDebugInformation="true"
@@ -128,7 +128,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../NyWin32Capture;../../src/"
+				AdditionalIncludeDirectories="../../inc/"
 				PreprocessorDefinitions="WIN32;_WINDOWS;NDEBUG"
 				MinimalRebuild="false"
 				RuntimeLibrary="0"
@@ -151,7 +151,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmiids.lib strmbasd.lib WinMM.Lib"
+				AdditionalDependencies="strmiids.lib WinMM.Lib"
 				LinkIncremental="1"
 				GenerateDebugInformation="true"
 				SubSystem="2"
@@ -185,7 +185,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{626B32D4-1EE8-4D92-AA2E-C96603EA83CB}"
-			RelativePathToProject="..\..\build\NyWin32CaptureLib.vcproj"
+			RelativePathToProject="..\build\NyWin32CaptureLib.vcproj"
 		/>
 	</References>
 	<Files>

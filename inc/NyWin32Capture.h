@@ -122,6 +122,8 @@ struct ISampleGrabber;
 namespace NyWin32Capture
 {
 
+	//class IMediaControl;
+
 	class CaptureImageCallback;
 	class CaptureDevice;
 	/**	startCaptureCallbackが呼び出すコールバック関数です。

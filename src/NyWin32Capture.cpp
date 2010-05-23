@@ -24,34 +24,33 @@
  * THE SOFTWARE.
  * 
  */
+
+
+/**
+How to Compile
+
+This project requires Windows PSDK 7.1
+Download from Microsoft website.
+http://www.microsoft.com/downloads/details.aspx?displaylang=en&FamilyID=35aeda01-421d-4ba5-b44b-543dc8c33a20
+
+コンパイルについて
+このコードをコンパイルするためには、Windows PSDK 7.1が必要です。
+MicrosoftのWebサイトからダウンロードしてください。
+
+http://www.microsoft.com/downloads/details.aspx?displaylang=en&FamilyID=35aeda01-421d-4ba5-b44b-543dc8c33a20
+
+baseclassフォルダの下は、PSDK7.1のdirectshow/multimediaディレクトリのファイルを参照して
+います。インストールディレクトリが違う場合は、場所を書き換えてください。
+*/
 #include "NyWin32Capture.h"
-#include <dshow.h>
+#include "qedit_def.h"	//qedit.hが無くてもがんばるためのヘッダ
 #include <stdio.h>
 #include <conio.h>
-/**
-コンパイルについて
-このコードをコンパイルするためには、PSDK 7.0,PSDK6.1が必要です。
-MicrosoftのWebサイトからダウンロードしてください。ダウンロードしたら、
-PSDK7.0のdirectshow/baseclassesディレクトリから、.hと.cファイルを
-extlib/BaseClassesWin32ディレクトリへコピーしてください。
-
-
-qedit.hについて
-Windows PSDK 7.0にはqedit.hが無いので、PSDK 6.1からコピーしてください。
-さらにPSDK 6.1のqedit.hにはバグがあり、存在しないdxtrans.hを参照しているので、
-その辺の問題を解消する必要があります。
-
-具体的な方法は、以下URLが参考になります。
-http://social.msdn.microsoft.com/forums/en-US/windowssdk/thread/ed097d2c-3d68-4f48-8448-277eaaf68252/
-
-
-*/
-#include <qedit.h>
-#include <math.h>
 #include <exception>
 #include <vector>
 #include <streams.h>
 #include <assert.h>
+
 
 using namespace std;
 
@@ -494,8 +493,9 @@ namespace NyWin32Capture
 			VARIANT varName;
 			varName.vt = VT_BSTR;
 			hr=bag->Read(L"FriendlyName",&varName,NULL);
-			this->_allocated_res.name=new WCHAR[wcslen(varName.bstrVal)+1];
-			wcscpy(this->_allocated_res.name,varName.bstrVal);
+			size_t len=wcslen(varName.bstrVal)+1;
+			this->_allocated_res.name=new WCHAR[len];
+			wcscpy_s(this->_allocated_res.name,len,varName.bstrVal);
 			VariantClear(&varName);
 			bag->Release();
 		}

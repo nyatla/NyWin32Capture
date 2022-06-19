@@ -3,8 +3,7 @@ Copyright (C)2008 R.Iizuka
 
 version 1.0.0
 
-Website:	http://nyatla.jp/  
-E-mail :	nyatla39<at>gmail.com
+Website:	http://nyatla.jp/
 
 
 ## NyWin32Capture
